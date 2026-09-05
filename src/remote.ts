@@ -15,10 +15,11 @@ const REMOTE_TOKEN = process.env.SIGAA_MCP_REMOTE_TOKEN;
 
 if (!REMOTE_TOKEN) {
   console.error(
-    "SIGAA_MCP_REMOTE_TOKEN não definido. Recusando iniciar o servidor remoto sem um token de " +
-      "acesso — nunca exponha o endpoint /mcp sem autenticação."
+    "AVISO: SIGAA_MCP_REMOTE_TOKEN não definido — o endpoint /mcp vai aceitar requisições SEM " +
+      "autenticação. Qualquer pessoa com a URL pode usar este servidor (fazer login no SIGAA com " +
+      "credenciais próprias, baixar arquivos, etc.). Defina SIGAA_MCP_REMOTE_TOKEN para exigir " +
+      "um token — recomendado sempre que possível."
   );
-  process.exit(1);
 }
 
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
@@ -42,13 +43,15 @@ const sweepInterval = setInterval(() => {
 sweepInterval.unref();
 
 function isAuthorized(req: http.IncomingMessage): boolean {
+  if (!REMOTE_TOKEN) return true; // sem token configurado: endpoint público (ver aviso de startup)
+
   const header = req.headers["authorization"];
   if (typeof header !== "string") return false;
   const match = /^Bearer\s+(.+)$/.exec(header);
   if (!match) return false;
 
   const provided = Buffer.from(match[1]);
-  const expected = Buffer.from(REMOTE_TOKEN as string);
+  const expected = Buffer.from(REMOTE_TOKEN);
   return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
@@ -146,7 +149,10 @@ const httpServer = http.createServer(async (req, res) => {
 });
 
 httpServer.listen(PORT, () => {
-  console.error(`sigaa-ufrpe-mcp: servidor remoto ouvindo na porta ${PORT} (endpoint POST/GET/DELETE /mcp).`);
+  console.error(
+    `sigaa-ufrpe-mcp: servidor remoto ouvindo na porta ${PORT} (endpoint POST/GET/DELETE /mcp, ` +
+      `auth ${REMOTE_TOKEN ? "por token" : "DESLIGADA — endpoint público"}).`
+  );
 });
 
 async function shutdown(): Promise<void> {

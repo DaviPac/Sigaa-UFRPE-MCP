@@ -71,7 +71,7 @@ Variáveis de ambiente:
 
 | Variável | Obrigatória | Descrição |
 |---|---|---|
-| `SIGAA_MCP_REMOTE_TOKEN` | **Sim** | Token de acesso (`Authorization: Bearer <token>`). O processo recusa iniciar sem ela. |
+| `SIGAA_MCP_REMOTE_TOKEN` | Não, mas fortemente recomendada | Token de acesso (`Authorization: Bearer <token>`). Se **não** definida, o endpoint `/mcp` fica público — qualquer pessoa com a URL pode usá-lo (ver "Conectar sem token" abaixo, necessário para a tela simplificada de conectores do app/web do Claude, que não tem campo para headers customizados). |
 | `PORT` | Não (padrão `3000`) | Porta HTTP. |
 | `SIGAA_MCP_DOWNLOAD_DIR` | Não | Mesma variável do modo stdio — pasta onde arquivos baixados são salvos (compartilhada entre todas as conexões). |
 
@@ -114,18 +114,34 @@ um processo local:
 }
 ```
 
-**Claude.ai (web)**: em Settings → Connectors, adicione um connector
-customizado apontando para `https://seu-host.example.com/mcp`, informando o
-mesmo token no header `Authorization`. A UI exata pode mudar — confira a
-documentação atual da Anthropic sobre "remote MCP connectors" se os passos
-acima não baterem com o que você vê na tela.
+**Claude.ai (web) e apps mobile — "Adicionar conector personalizado"**: essa
+tela só tem **Nome + URL** e um toggle "Requer início de sessão" (para
+servidores com OAuth) — **não tem campo para header customizado**, então não
+dá para mandar `Authorization: Bearer <token>` por ali. Duas opções:
+
+1. **Deixe `SIGAA_MCP_REMOTE_TOKEN` sem definir no deploy** (endpoint
+   público, sem autenticação) e coloque só a URL (`https://seu-host.example.com/mcp`),
+   com o toggle "Requer início de sessão" **desligado**. É o único jeito de
+   usar essa tela hoje, dado que ela não suporta token estático nem faz
+   sentido usar OAuth aqui (não implementamos um authorization server).
+2. Prefira usar **Claude Desktop ou Claude Code** (config JSON acima) sempre
+   que possível — lá dá pra manter o `SIGAA_MCP_REMOTE_TOKEN` exigido, já que
+   o campo `headers` é suportado nativamente.
 
 ### Limitações / avisos de segurança
 
-- Pensado para **uso pessoal de um único usuário**, não multi-tenant: quem
-  tiver o token tem acesso completo (login, download de arquivos, etc.).
-  Trate-o como uma senha — gere com `openssl rand -hex 32`, nunca comite, e
-  rotacione (troque a env var e reinicie o processo) se vazar.
+- **Se você rodar sem `SIGAA_MCP_REMOTE_TOKEN`** (necessário para o app/web,
+  ver acima): o endpoint fica público. Qualquer pessoa com a URL pode chamar
+  `sigaa_login` com credenciais próprias, baixar arquivos, etc. — cada
+  conexão tem sua própria `SigaaSession` isolada (ver seção "Sessão" abaixo),
+  então isso não expõe *a sua* conta SIGAA a estranhos, mas transforma o
+  servidor num recurso público que qualquer um pode usar/consumir. Se isso
+  for uma preocupação, prefira Desktop/Code com token, ou restrinja o acesso
+  por outra camada (proxy com allowlist de IP, VPN, etc.).
+- Pensado para **uso pessoal**, não multi-tenant de verdade: mesmo com token,
+  quem o tiver tem acesso completo. Trate-o como uma senha — gere com
+  `openssl rand -hex 32`, nunca comite, e rotacione (troque a env var e
+  reinicie o processo) se vazar.
 - Downloads de **todas** as conexões caem na mesma pasta
   (`SIGAA_MCP_DOWNLOAD_DIR`), sem isolamento por sessão.
 - Sessões sem atividade por 30 minutos são encerradas e removidas da memória

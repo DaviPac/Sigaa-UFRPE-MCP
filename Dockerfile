@@ -13,8 +13,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
 
-# SIGAA_MCP_REMOTE_TOKEN é obrigatória (passe na plataforma de deploy) — sem
-# ela o servidor remoto recusa iniciar (ver src/remote.ts).
+# SIGAA_MCP_REMOTE_TOKEN é opcional mas fortemente recomendada (passe na
+# plataforma de deploy) — sem ela o endpoint /mcp fica público, sem
+# autenticação (ver src/remote.ts).
 ENV PORT=3000
 EXPOSE 3000
 
