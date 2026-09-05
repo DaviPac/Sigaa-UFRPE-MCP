@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { rawSigaaRequest, parseViewState } from "../sigaaClient.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 import { ALLOWED_HOSTS } from "../constants.js";
 
@@ -12,7 +12,7 @@ function truncate(html: string): { html: string; truncated: boolean } {
   return { html: html.slice(0, MAX_HTML_CHARS), truncated: true };
 }
 
-export function registerRawTools(server: McpServer): void {
+export function registerRawTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_get_html",
     {

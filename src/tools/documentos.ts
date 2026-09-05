@@ -3,7 +3,7 @@ import { doSigaaRequest, fetchPortalPDF } from "../sigaaClient.js";
 import { parseAtestadoMatricula } from "../parsers.js";
 import { URL_PORTAL_DISCENTE } from "../constants.js";
 import { saveDownload } from "../downloads.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 
 const JSCOOK_HISTORICO = "menu_form_menu_discente_discente_menu:A]#{ portalDiscente.historico }";
@@ -31,7 +31,7 @@ async function getAtestadoMatriculaTexto(viewState: string, jsessionid: string) 
   return { texto: res.$.text(), jsessionid: res.jsessionid };
 }
 
-export function registerDocumentosTools(server: McpServer): void {
+export function registerDocumentosTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_get_matricula",
     {

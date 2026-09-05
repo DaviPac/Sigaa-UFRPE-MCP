@@ -2,11 +2,11 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { downloadFile } from "../sigaaClient.js";
 import { saveDownload } from "../downloads.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 import { ALLOWED_HOSTS } from "../constants.js";
 
-export function registerDownloadTools(server: McpServer): void {
+export function registerDownloadTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_download_file",
     {

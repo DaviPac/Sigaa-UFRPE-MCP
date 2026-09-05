@@ -4,7 +4,7 @@ import { doSigaaRequest, getPaginaPortal, parseViewState } from "../sigaaClient.
 import { parseCronograma, parseNoticia, verifyTurmaPage } from "../parsers.js";
 import { URL_FREQUENCIA, URL_PORTAL_DISCENTE } from "../constants.js";
 import { PRESENCA_NAO_LANCADA, TurmaInfo } from "../types.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 
 /** Port de getPaginaTurma (sigaa.go:1292): entra na turma virtual e extrai
@@ -99,7 +99,7 @@ const turmaInputSchema = z
   })
   .passthrough();
 
-export function registerTurmaTools(server: McpServer): void {
+export function registerTurmaTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_get_turma",
     {

@@ -5,12 +5,14 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "sigaa-ufrpe-mcp": "dist/index.js"
+    "sigaa-ufrpe-mcp": "dist/index.js",
+    "sigaa-ufrpe-mcp-remote": "dist/remote.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
+    "start:remote": "node dist/remote.js",
     "inspector": "npx @modelcontextprotocol/inspector node dist/index.js"
   },
   "engines": {

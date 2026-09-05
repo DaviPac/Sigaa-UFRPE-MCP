@@ -1,7 +1,7 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getPaginaPortal } from "../sigaaClient.js";
 import { parseCH, parseIndices, parseTurmas } from "../parsers.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 
 /** Port de GetMainData (sigaa.go:1084): nome, matrícula, turmas resumidas,
@@ -39,7 +39,7 @@ export async function getMainData(jsessionid: string) {
   };
 }
 
-export function registerPortalTools(server: McpServer): void {
+export function registerPortalTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_main_data",
     {

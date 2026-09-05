@@ -8,7 +8,7 @@ import {
   URL_CURRICULO,
   URL_PORTAL_DISCENTE,
 } from "../constants.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 
 /** Port de getPaginaCurriculo (sigaa.go:808): descobre o curso do aluno a
@@ -142,7 +142,7 @@ async function getDetalhesComponente(jsessionid: string, viewState: string, idCo
   return { componente, jsessionid: portal.jsessionid, viewState: portal.viewState };
 }
 
-export function registerCurriculoTools(server: McpServer): void {
+export function registerCurriculoTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_get_curriculo",
     {

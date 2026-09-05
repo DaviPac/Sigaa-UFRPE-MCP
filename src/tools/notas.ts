@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { doSigaaRequest } from "../sigaaClient.js";
 import { URL_PORTAL_DISCENTE } from "../constants.js";
 import type { DisciplinaNotas } from "../types.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 
 /** Port de getPaginaNotas + GetNotas (sigaa.go:1376/1397): relatório de notas
@@ -66,7 +66,7 @@ async function getNotas(jsessionid: string, viewState: string) {
   return { disciplinas, anteriores, jsessionid: res.jsessionid };
 }
 
-export function registerNotasTools(server: McpServer): void {
+export function registerNotasTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_get_notas",
     {

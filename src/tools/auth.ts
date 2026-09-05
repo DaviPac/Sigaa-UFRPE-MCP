@@ -1,10 +1,10 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { getPaginaPortal, login } from "../sigaaClient.js";
-import { session } from "../session.js";
+import type { SigaaSession } from "../session.js";
 import { jsonResult, safeTool } from "../mcpHelpers.js";
 
-export function registerAuthTools(server: McpServer): void {
+export function registerAuthTools(server: McpServer, session: SigaaSession): void {
   server.registerTool(
     "sigaa_login",
     {

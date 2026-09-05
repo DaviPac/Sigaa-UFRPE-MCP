@@ -1,7 +1,10 @@
-// Estado de sessão SIGAA mantido em memória durante a vida do processo MCP
-// (transporte stdio, um processo por cliente). Ao contrário da API Go
-// (stateless, cliente re-envia jsessionid/viewState a cada chamada), aqui a
-// sessão fica guardada no servidor e as tools leem/atualizam este objeto.
+// Estado de sessão SIGAA mantido em memória durante a vida de UMA conexão MCP
+// (stdio: a única conexão do processo; remoto/HTTP: uma instância por
+// Mcp-Session-Id). Ao contrário da API Go (stateless, cliente re-envia
+// jsessionid/viewState a cada chamada), aqui a sessão fica guardada no
+// servidor e as tools leem/atualizam este objeto — cada conexão recebe sua
+// própria instância (ver src/mcpServer.ts), nunca uma compartilhada entre
+// clientes diferentes.
 
 export class SigaaSession {
   jsessionid: string | undefined;
@@ -36,6 +39,3 @@ export class SigaaSession {
     this.matricula = undefined;
   }
 }
-
-// Sessão única do processo (stdio = um cliente por processo).
-export const session = new SigaaSession();
