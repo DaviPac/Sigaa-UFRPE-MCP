@@ -1,0 +1,29 @@
+{
+  "name": "sigaa-ufrpe-mcp",
+  "version": "0.1.0",
+  "description": "MCP server para SIGAA UFRPE com acesso avançado: HTML cru, downloads de arquivos e requisições customizadas.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "sigaa-ufrpe-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "cheerio": "^1.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
