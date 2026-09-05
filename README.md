@@ -164,7 +164,7 @@ tools usam a sessão ativa.
 | `sigaa_login` | Autentica (usuário/senha), trata o interstitial "Aviso de Logon". |
 | `sigaa_get_html` | Devolve o HTML bruto de qualquer URL sob `sigs.ufrpe.br`, sem parsing. |
 | `sigaa_raw_request` | Monta e dispara uma requisição customizada (método, URL, campos de formulário) — para reproduzir ações JSF sem precisar de uma tool dedicada. |
-| `sigaa_download_file` | Baixa um arquivo arbitrário (PDF, anexo, etc.) e salva em disco, validando que a resposta não é uma página de erro disfarçada. |
+| `sigaa_download_file` | Baixa um arquivo arbitrário (PDF, anexo, etc.), validando que a resposta não é uma página de erro disfarçada. Devolve o conteúdo embutido na resposta da tool (base64, até 8 MiB) — não só um caminho de arquivo, que não seria acessível no modo remoto — e, se for PDF, também o texto extraído. |
 
 ### Paridade com a API REST original
 
@@ -176,11 +176,28 @@ tools usam a sessão ativa.
 | `sigaa_get_curriculo` | Estrutura curricular do curso. |
 | `sigaa_get_componente` | Detalhes de um componente curricular (ementa, pré-requisitos, equivalências). |
 | `sigaa_get_matricula` | Atestado de matrícula estruturado. |
-| `sigaa_get_historico_pdf` | Baixa o histórico escolar em PDF. |
-| `sigaa_get_vinculo_pdf` | Baixa a declaração de vínculo em PDF. |
+| `sigaa_get_historico_pdf` | Baixa o histórico escolar em PDF (conteúdo embutido na resposta + texto extraído). |
+| `sigaa_get_vinculo_pdf` | Baixa a declaração de vínculo em PDF (conteúdo embutido na resposta + texto extraído). |
 
 Todas as tools que dependem de um `ViewState` avisam explicitamente quando é
 preciso chamar `sigaa_main_data` antes.
+
+### Downloads (PDF, anexos, etc.)
+
+As três tools que baixam arquivos (`sigaa_download_file`,
+`sigaa_get_historico_pdf`, `sigaa_get_vinculo_pdf`) fazem duas coisas com o
+arquivo baixado:
+
+1. Salvam uma cópia em disco em `SIGAA_MCP_DOWNLOAD_DIR` (útil no modo stdio
+   local, onde esse caminho é diretamente acessível).
+2. **Embutem o conteúdo na própria resposta da tool** — um item `resource`
+   com o arquivo em base64 (até 8 MiB; acima disso só o aviso + o caminho em
+   disco) — porque no modo remoto (HTTP) não existe filesystem compartilhada
+   entre o servidor e quem chama a tool; só o caminho não serviria de nada.
+3. Quando o arquivo é um PDF, o texto também é extraído no servidor
+   (`pdf-parse`) e incluído como um item de texto adicional, para o modelo
+   conseguir ler o conteúdo mesmo que o cliente MCP não saiba renderizar o
+   `resource` binário.
 
 ## Segurança
 

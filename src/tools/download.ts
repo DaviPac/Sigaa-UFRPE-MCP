@@ -2,8 +2,9 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { downloadFile } from "../sigaaClient.js";
 import { saveDownload } from "../downloads.js";
+import { tryExtractPdfText } from "../pdfText.js";
 import type { SigaaSession } from "../session.js";
-import { jsonResult, safeTool } from "../mcpHelpers.js";
+import { fileResult, safeTool } from "../mcpHelpers.js";
 import { ALLOWED_HOSTS } from "../constants.js";
 
 export function registerDownloadTools(server: McpServer, session: SigaaSession): void {
@@ -15,8 +16,9 @@ export function registerDownloadTools(server: McpServer, session: SigaaSession):
         `Monta e dispara uma requisição (method + url + campos de formulário) contra ${[...ALLOWED_HOSTS].join(", ")} ` +
         "esperando um arquivo binário como resposta (PDF, anexo de cronograma, etc.) em vez de " +
         "HTML. Detecta e rejeita páginas de erro/sessão expirada disfarçadas de arquivo (redirect " +
-        "ou Content-Type text/html). Salva o arquivo em disco e devolve o caminho — generaliza " +
-        "os fluxos de download hoje hardcoded na API Go (anexos de cronograma, histórico/vínculo em PDF) " +
+        "ou Content-Type text/html). Devolve o conteúdo do arquivo embutido na resposta " +
+        "(base64, até 8 MiB) e, se for um PDF, também o texto extraído — generaliza os fluxos " +
+        "de download hoje hardcoded na API Go (anexos de cronograma, histórico/vínculo em PDF) " +
         "para qualquer ação de download do SIGAA.",
       inputSchema: {
         method: z.enum(["GET", "POST"]).describe("Método HTTP."),
@@ -52,13 +54,17 @@ export function registerDownloadTools(server: McpServer, session: SigaaSession):
       if (res.jsessionid) session.update({ jsessionid: res.jsessionid });
 
       const path = await saveDownload(res.buffer, res.filename);
+      const filename = res.filename ?? "arquivo";
+      const extraText = res.contentType.includes("application/pdf")
+        ? await tryExtractPdfText(res.buffer)
+        : undefined;
 
-      return jsonResult({
-        path,
-        filename: res.filename ?? null,
-        contentType: res.contentType,
-        bytes: res.buffer.length,
-      });
+      return fileResult(
+        { path, filename: res.filename ?? null, contentType: res.contentType, bytes: res.buffer.length },
+        res.buffer,
+        { filename, mimeType: res.contentType || "application/octet-stream" },
+        extraText
+      );
     })
   );
 }

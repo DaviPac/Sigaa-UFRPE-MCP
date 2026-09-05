@@ -3,8 +3,9 @@ import { doSigaaRequest, fetchPortalPDF } from "../sigaaClient.js";
 import { parseAtestadoMatricula } from "../parsers.js";
 import { URL_PORTAL_DISCENTE } from "../constants.js";
 import { saveDownload } from "../downloads.js";
+import { tryExtractPdfText } from "../pdfText.js";
 import type { SigaaSession } from "../session.js";
-import { jsonResult, safeTool } from "../mcpHelpers.js";
+import { fileResult, jsonResult, safeTool } from "../mcpHelpers.js";
 
 const JSCOOK_HISTORICO = "menu_form_menu_discente_discente_menu:A]#{ portalDiscente.historico }";
 const JSCOOK_VINCULO = "menu_form_menu_discente_discente_menu:A]#{ declaracaoVinculo.emitirDeclaracao }";
@@ -59,8 +60,9 @@ export function registerDocumentosTools(server: McpServer, session: SigaaSession
     {
       title: "Baixar histórico escolar (PDF)",
       description:
-        "Baixa o histórico escolar do aluno em PDF e salva em disco. Requer um ViewState válido " +
-        "— chame 'sigaa_main_data' antes se ainda não tiver um.",
+        "Baixa o histórico escolar do aluno em PDF, devolvendo o conteúdo embutido na resposta " +
+        "(base64) e o texto extraído. Requer um ViewState válido — chame 'sigaa_main_data' antes " +
+        "se ainda não tiver um.",
       inputSchema: {},
     },
     safeTool(async () => {
@@ -70,8 +72,15 @@ export function registerDocumentosTools(server: McpServer, session: SigaaSession
       }
       const pdf = await fetchPortalPDF(JSCOOK_HISTORICO, viewState, jsessionid);
       session.update({ jsessionid: pdf.jsessionid });
-      const path = await saveDownload(pdf.buffer, pdf.filename ?? "historico.pdf");
-      return jsonResult({ path, bytes: pdf.buffer.length, contentType: pdf.contentType });
+      const filename = pdf.filename ?? "historico.pdf";
+      const path = await saveDownload(pdf.buffer, filename);
+      const extraText = await tryExtractPdfText(pdf.buffer);
+      return fileResult(
+        { path, bytes: pdf.buffer.length, contentType: pdf.contentType },
+        pdf.buffer,
+        { filename, mimeType: pdf.contentType },
+        extraText
+      );
     })
   );
 
@@ -80,8 +89,9 @@ export function registerDocumentosTools(server: McpServer, session: SigaaSession
     {
       title: "Baixar declaração de vínculo (PDF)",
       description:
-        "Baixa a declaração de vínculo do aluno em PDF e salva em disco. Requer um ViewState " +
-        "válido — chame 'sigaa_main_data' antes se ainda não tiver um.",
+        "Baixa a declaração de vínculo do aluno em PDF, devolvendo o conteúdo embutido na " +
+        "resposta (base64) e o texto extraído. Requer um ViewState válido — chame " +
+        "'sigaa_main_data' antes se ainda não tiver um.",
       inputSchema: {},
     },
     safeTool(async () => {
@@ -91,8 +101,15 @@ export function registerDocumentosTools(server: McpServer, session: SigaaSession
       }
       const pdf = await fetchPortalPDF(JSCOOK_VINCULO, viewState, jsessionid);
       session.update({ jsessionid: pdf.jsessionid });
-      const path = await saveDownload(pdf.buffer, pdf.filename ?? "vinculo.pdf");
-      return jsonResult({ path, bytes: pdf.buffer.length, contentType: pdf.contentType });
+      const filename = pdf.filename ?? "vinculo.pdf";
+      const path = await saveDownload(pdf.buffer, filename);
+      const extraText = await tryExtractPdfText(pdf.buffer);
+      return fileResult(
+        { path, bytes: pdf.buffer.length, contentType: pdf.contentType },
+        pdf.buffer,
+        { filename, mimeType: pdf.contentType },
+        extraText
+      );
     })
   );
 }
